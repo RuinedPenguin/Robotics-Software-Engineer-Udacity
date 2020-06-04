@@ -1,38 +1,36 @@
 #include <ros/ros.h>
 #include <visualization_msgs/Marker.h>
 #include <nav_msgs/Odometry.h>
-//#include <complex>
+#include <complex>
 
 
 //Positions and thresholds
-float pickUp[3] = {4.0, -1.0, 1.0};
-float dropOff[3] = {-2.3, 2.2, 1.0};
-float thresh[2] = {0.1, 0.01};
-//float start[3] = {4.0, -2.0, 0.0};
-//float goal[3] = {-2.3, 2.2, 1.0};
+float pickUp[3] = {2.5, -1.0, 1.0};
+float dropOff[3] = {-2.2, 3.5, 1.0};
+float thresh = 1.0 ;
 
 
 //Flags
 bool atPickUp = false;
 bool atDropOff = false;
-bool pickUpDone = false;
-bool dropOffDone = false;
+bool haveObject = false;
 
 
 void chatterCallback(const nav_msgs::Odometry::ConstPtr& msg)
 { 
   
 //Pick up
-if (std::abs(pickUp[0] -msg->pose.pose.position.x) < thresh[0] && std::abs(pickUp[1] -msg->pose.pose.position.y) < thresh[0] && std::abs(pickUp[2] -msg->pose.pose.orientation.w) < thresh[1])
+if (std::abs(pickUp[0] -msg->pose.pose.position.x) < thresh && std::abs(pickUp[1] -msg->pose.pose.position.y) < thresh)
    { 
     if(!atPickUp)
     {
      atPickUp = true;
     }
-   }else{atPickUp = false;}
+   }
+else{atPickUp = false;}
 
 //Drop off
-if (std::abs(dropOff[0] -msg->pose.pose.position.x) < thresh[0] && std::abs(dropOff[1] -msg->pose.pose.position.y) < thresh[0] && std::abs(dropOff[2] -msg->pose.pose.orientation.w) < thresh[1])
+if (std::abs(dropOff[0] -msg->pose.pose.position.x) < thresh && std::abs(dropOff[1] -msg->pose.pose.position.y) < thresh)
   { 
     if(!atDropOff)
     {
@@ -85,9 +83,9 @@ int main( int argc, char** argv )
     marker.pose.orientation.w = pickUp[2];
 
     // Set the scale of the marker -- 1x1x1 here means 1m on a side
-    marker.scale.x = 0.5;
-    marker.scale.y = 0.5;
-    marker.scale.z = 0.5;
+    marker.scale.x = 0.3;
+    marker.scale.y = 0.3;
+    marker.scale.z = 0.3;
 
     // Set the color -- be sure to set alpha to something non-zero!
     marker.color.r = 1.0f;
@@ -117,12 +115,12 @@ int main( int argc, char** argv )
     ros::spinOnce();
    }
    
-   if(atPickUp && !pickUpDone)
+   if(atPickUp && !haveObject)
    {
     marker.action = visualization_msgs::Marker::DELETE;
     marker_pub.publish(marker);
     ROS_INFO("Pick-up marker removed");
-    pickUpDone = true;
+    haveObject = true;
    }  
    
    //Wait for Drop-Off
@@ -131,7 +129,7 @@ int main( int argc, char** argv )
     ros::spinOnce();
    }
 
-   if(atDropOff && !dropOffDone)
+   if(atDropOff && haveObject)
    {
     marker.pose.position.x = dropOff[0];
     marker.pose.position.y = dropOff[1];
@@ -139,10 +137,11 @@ int main( int argc, char** argv )
     marker.action = visualization_msgs::Marker::ADD;
     marker_pub.publish(marker);
     ROS_INFO("Drop-off marker displayed");
-    dropOffDone = true;
+    haveObject = false;
     ros::Duration(10.0).sleep();
-   }  
     return 0;
+   }  
+    
   }
  
 }

@@ -2,7 +2,7 @@
 #include <move_base_msgs/MoveBaseAction.h>
 #include <actionlib/client/simple_action_client.h>
 
-//float start[3] = {4.0, -1.0, 1.0};
+//float start[3] = {3.0, -1.0, 1.0};
 //float goal[3] = {-2.3, 2.2, 1.0};
 // Define a client for to send goal requests to the move_base server through a SimpleActionClient
 typedef actionlib::SimpleActionClient<move_base_msgs::MoveBaseAction> MoveBaseClient;
@@ -26,7 +26,7 @@ int main(int argc, char** argv){
   goal.target_pose.header.stamp = ros::Time::now();
 
   // Define a position and orientation for the robot to reach
-  goal.target_pose.pose.position.x = 4.0;
+  goal.target_pose.pose.position.x = 2.2;
   goal.target_pose.pose.position.y = -1.0;
   goal.target_pose.pose.orientation.w = 1.0;
 
@@ -44,11 +44,11 @@ int main(int argc, char** argv){
      ros::Duration(5.0).sleep();
      //Go to drop off point
      // Define a position and orientation for the robot to reach
-     goal.target_pose.pose.position.x = -2.3;
-     goal.target_pose.pose.position.y = 2.2;
+     goal.target_pose.pose.position.x = -2.2;
+     goal.target_pose.pose.position.y = 3.5;
      goal.target_pose.pose.orientation.w = 1.0;
      // Send the goal position and orientation for the robot to reach
-     ROS_INFO("Sending goal sending drop off goal");
+     ROS_INFO("Sending drop off goal");
      ac.sendGoal(goal);
      // Wait an infinite time for the results
      ac.waitForResult();
