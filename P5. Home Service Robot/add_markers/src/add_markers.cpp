@@ -3,11 +3,18 @@
 #include <nav_msgs/Odometry.h>
 #include <complex>
 
+//in map frame
+//float start[3] = {2.5, -1.0, 1.0};  
+//float goal[3] = {-2.2, 3.5, 1.0};
+
+//in odom frame
+//float start[3] = {4.0, -1.0, 1.0};  
+//float goal[3] = {-3.5, -2.0, 1.0};
 
 //Positions and thresholds
-float pickUp[3] = {2.5, -1.0, 1.0};
-float dropOff[3] = {-2.2, 3.5, 1.0};
-float thresh = 1.0 ;
+float pickUp[3] = {4.0, -1.0, 1.0};
+float dropOff[3] = {-3.5, -2.0, 1.0};
+float delta = 0.2 ;
 
 
 //Flags
@@ -20,7 +27,7 @@ void chatterCallback(const nav_msgs::Odometry::ConstPtr& msg)
 { 
   
 //Pick up
-if (std::abs(pickUp[0] -msg->pose.pose.position.x) < thresh && std::abs(pickUp[1] -msg->pose.pose.position.y) < thresh)
+if (std::abs(pickUp[0] -msg->pose.pose.position.x) < delta && std::abs(pickUp[1] -msg->pose.pose.position.y) < delta)
    { 
     if(!atPickUp)
     {
@@ -30,7 +37,7 @@ if (std::abs(pickUp[0] -msg->pose.pose.position.x) < thresh && std::abs(pickUp[1
 else{atPickUp = false;}
 
 //Drop off
-if (std::abs(dropOff[0] -msg->pose.pose.position.x) < thresh && std::abs(dropOff[1] -msg->pose.pose.position.y) < thresh)
+if (std::abs(dropOff[0] -msg->pose.pose.position.x) < delta && std::abs(dropOff[1] -msg->pose.pose.position.y) < delta)
   { 
     if(!atDropOff)
     {
@@ -58,7 +65,7 @@ int main( int argc, char** argv )
   {
     visualization_msgs::Marker marker;
     // Set the frame ID and timestamp.  See the TF tutorials for information on these.
-    marker.header.frame_id = "map";
+    marker.header.frame_id = "odom";
     marker.header.stamp = ros::Time::now();
 
     // Set the namespace and id for this marker.  This serves to create a unique ID
@@ -117,6 +124,7 @@ int main( int argc, char** argv )
    
    if(atPickUp && !haveObject)
    {
+    ros::Duration(3.0).sleep();
     marker.action = visualization_msgs::Marker::DELETE;
     marker_pub.publish(marker);
     ROS_INFO("Pick-up marker removed");
@@ -133,12 +141,13 @@ int main( int argc, char** argv )
    {
     marker.pose.position.x = dropOff[0];
     marker.pose.position.y = dropOff[1];
-    marker.pose.orientation.w = dropOff[2];;
+    marker.pose.orientation.w = dropOff[2];
+    ros::Duration(3.0).sleep();
     marker.action = visualization_msgs::Marker::ADD;
     marker_pub.publish(marker);
     ROS_INFO("Drop-off marker displayed");
     haveObject = false;
-    ros::Duration(10.0).sleep();
+    ros::Duration(5.0).sleep();
     return 0;
    }  
     
