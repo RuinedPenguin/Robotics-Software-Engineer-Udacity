@@ -12,38 +12,38 @@
 //float goal[3] = {-3.5, -2.0, 1.0};
 
 //Positions and thresholds
-float pickUp[3] = {4.0, -1.0, 1.0};
-float dropOff[3] = {-3.5, -2.0, 1.0};
+float pickUpGoal[3] = {4.0, -1.0, 1.0};
+float dropOffGoal[3] = {-3.5, -2.0, 1.0};
 float delta = 0.2 ;
 
 
 //Flags
-bool atPickUp = false;
-bool atDropOff = false;
+bool pickUp = false;
+bool dropOff = false;
 bool haveObject = false;
 
 
-void chatterCallback(const nav_msgs::Odometry::ConstPtr& msg)
+void callback(const nav_msgs::Odometry::ConstPtr& msg)
 { 
   
 //Pick up
-if (std::abs(pickUp[0] -msg->pose.pose.position.x) < delta && std::abs(pickUp[1] -msg->pose.pose.position.y) < delta)
+if (std::abs(pickUpGoal[0] -msg->pose.pose.position.x) < delta && std::abs(pickUpGoal[1] -msg->pose.pose.position.y) < delta)
    { 
-    if(!atPickUp)
+    if(!pickUp)
     {
-     atPickUp = true;
+     pickUp = true;
     }
    }
-else{atPickUp = false;}
+else{pickUp = false;}
 
 //Drop off
-if (std::abs(dropOff[0] -msg->pose.pose.position.x) < delta && std::abs(dropOff[1] -msg->pose.pose.position.y) < delta)
+if (std::abs(dropOffGoal[0] -msg->pose.pose.position.x) < delta && std::abs(dropOffGoal[1] -msg->pose.pose.position.y) < delta)
   { 
-    if(!atDropOff)
+    if(!dropOff)
     {
-     atDropOff = true;
+     dropOff = true;
     }
-   }else{atDropOff = false;}
+   }else{dropOff = false;}
 
 }
 
@@ -54,7 +54,7 @@ int main( int argc, char** argv )
   ros::NodeHandle n;
   ros::Rate r(1);
   ros::Publisher marker_pub = n.advertise<visualization_msgs::Marker>("visualization_marker", 1);
-  ros::Subscriber odom_sub = n.subscribe("odom", 1000, chatterCallback);
+  ros::Subscriber odom_sub = n.subscribe("odom", 1000, callback);
   
 
 
@@ -80,14 +80,14 @@ int main( int argc, char** argv )
     marker.action = visualization_msgs::Marker::ADD;
 
     // Set the pose of the marker.  This is a full 6DOF pose relative to the frame/time specified in the header
-    marker.pose.position.x = pickUp[0];
-    marker.pose.position.y = pickUp[1];
+    marker.pose.position.x = pickUpGoal[0];
+    marker.pose.position.y = pickUpGoal[1];
+    marker.pose.orientation.w = pickUpGoal[2];
+
     marker.pose.position.z = 0;
-    
     marker.pose.orientation.x = 0.0;
     marker.pose.orientation.y = 0.0;
     marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = pickUp[2];
 
     // Set the scale of the marker -- 1x1x1 here means 1m on a side
     marker.scale.x = 0.3;
@@ -117,12 +117,12 @@ int main( int argc, char** argv )
    ROS_INFO("Pick-up marker displayed");
    
    //Wait for Pick-Up
-   while(!atPickUp)
+   while(!pickUp)
    {
     ros::spinOnce();
    }
    
-   if(atPickUp && !haveObject)
+   if(pickUp && !haveObject)
    {
     ros::Duration(3.0).sleep();
     marker.action = visualization_msgs::Marker::DELETE;
@@ -132,21 +132,22 @@ int main( int argc, char** argv )
    }  
    
    //Wait for Drop-Off
-   while(!atDropOff)
+   while(!dropOff)
    {
     ros::spinOnce();
    }
 
-   if(atDropOff && haveObject)
+   if(dropOff && haveObject)
    {
-    marker.pose.position.x = dropOff[0];
-    marker.pose.position.y = dropOff[1];
-    marker.pose.orientation.w = dropOff[2];
+    marker.pose.position.x = dropOffGoal[0];
+    marker.pose.position.y = dropOffGoal[1];
+    marker.pose.orientation.w = dropOffGoal[2];
     ros::Duration(3.0).sleep();
     marker.action = visualization_msgs::Marker::ADD;
     marker_pub.publish(marker);
     ROS_INFO("Drop-off marker displayed");
     haveObject = false;
+
     ros::Duration(5.0).sleep();
     return 0;
    }  
